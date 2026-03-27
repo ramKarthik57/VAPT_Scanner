@@ -52,6 +52,20 @@ def get_vulnerability_data(vuln_type, header=None):
             "remed": "Sanitize input, use strongly typed schemas, and avoid passing raw objects to NoSQL query APIs."
         },
 
+        # --- Deep Scan Modules ---
+        "Blind OS Command Injection": {
+            "impact": 0.95, "exploitability": 0.8,
+            "cwe": "CWE-78", "owasp": "A03:2021-Injection",
+            "desc": "The application is vulnerable to OS command injection via a time-delay execution payload.",
+            "remed": "Avoid using system calls. Use language-specific APIs and strict input sanitization."
+        },
+        "DOM-Based XSS (Static Warning)": {
+            "impact": 0.6, "exploitability": 0.5,
+            "cwe": "CWE-79", "owasp": "A03:2021-Injection",
+            "desc": "Static analysis of the page source revealed Javascript that writes user-controlled data directly to the DOM.",
+            "remed": "Use safe DOM manipulation methods like textContent instead of innerHTML."
+        },
+
         # --- XSS ---
         "Reflected XSS": {
             "impact": 0.6, "exploitability": 0.8,

@@ -5,6 +5,9 @@ from urllib.parse import urlparse, parse_qs, urlencode, urlunparse
 
 # Shared session with realistic User-Agent
 SESSION = requests.Session()
+adapter = requests.adapters.HTTPAdapter(pool_connections=25, pool_maxsize=25)
+SESSION.mount('http://', adapter)
+SESSION.mount('https://', adapter)
 SESSION.headers.update({
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
 })
@@ -51,7 +54,7 @@ def detect_advanced_sqli(url, forms=None, deep=False):
             tp = params.copy()
             
             # Error-Based
-            tp[param] = "'"
+            tp[param] = ["'"]
             try:
                 r = SESSION.get(urllib3.util.parse_url(urlunparse(parsed._replace(query=urlencode(tp, doseq=True)))).url, timeout=5)
                 if any(err in r.text.lower() for err in sql_errors):
@@ -62,8 +65,8 @@ def detect_advanced_sqli(url, forms=None, deep=False):
                 
             # Boolean-Based
             fp = params.copy()
-            tp[param] = "' AND 1=1--"
-            fp[param] = "' AND 1=2--"
+            tp[param] = ["' AND 1=1--"]
+            fp[param] = ["' AND 1=2--"]
             try:
                 r_true = SESSION.get(urlunparse(parsed._replace(query=urlencode(tp, doseq=True))), timeout=5)
                 r_false = SESSION.get(urlunparse(parsed._replace(query=urlencode(fp, doseq=True))), timeout=5)
@@ -75,7 +78,7 @@ def detect_advanced_sqli(url, forms=None, deep=False):
                 
             # Time-Based
             if deep:
-                tp[param] = "' AND SLEEP(3)--"
+                tp[param] = ["' AND SLEEP(3)--"]
                 try:
                     start = time.time()
                     SESSION.get(urlunparse(parsed._replace(query=urlencode(tp, doseq=True))), timeout=8)
@@ -173,7 +176,7 @@ def detect_advanced_xss(url, forms=None):
             for p_type, base_payload in payloads.items():
                 for payload_mut in get_evasion_payloads(base_payload):
                     tp = params.copy()
-                    tp[param] = payload_mut
+                    tp[param] = [payload_mut]
                     try:
                         r = SESSION.get(urlunparse(parsed._replace(query=urlencode(tp, doseq=True))), timeout=5)
                         if test_waf_blocking(r):
@@ -232,7 +235,7 @@ def detect_idor(url, forms=None):
     for param in params:
         if params[param][0].isdigit():
             tp = params.copy()
-            tp[param] = str(int(params[param][0]) + 1)
+            tp[param] = [str(int(params[param][0]) + 1)]
             try:
                 r = SESSION.get(urlunparse(parsed._replace(query=urlencode(tp, doseq=True))), timeout=5)
                 if r.status_code == 200 and base.status_code == 200 and abs(len(r.text) - len(base.text)) > 100 and r.text != base.text:
@@ -257,7 +260,7 @@ def detect_directory_traversal(url):
     params = parse_qs(parsed.query)
     for param in params:
         tp = params.copy()
-        tp[param] = "../../../../etc/passwd"
+        tp[param] = ["../../../../etc/passwd"]
         try:
             r = SESSION.get(urlunparse(parsed._replace(query=urlencode(tp, doseq=True))), timeout=5)
             if "root:" in r.text and "bin/bash" in r.text:
@@ -336,7 +339,7 @@ def detect_business_logic(url, forms=None):
     for param in params:
         if param.lower() in price_params:
             tp = params.copy()
-            tp[param] = "-1"
+            tp[param] = ["-1"]
             try:
                 r = SESSION.get(urlunparse(parsed._replace(query=urlencode(tp, doseq=True))), timeout=5)
                 if r.status_code == 200:
@@ -400,7 +403,7 @@ def detect_open_redirect(url):
     for param in params:
         if param.lower() in ["redirect", "url", "next", "return", "returnurl", "goto", "redir", "dest"]:
             tp = params.copy()
-            tp[param] = "https://evil.com"
+            tp[param] = ["https://evil.com"]
             try:
                 r = SESSION.get(urlunparse(parsed._replace(query=urlencode(tp, doseq=True))), allow_redirects=False, timeout=5)
                 if "Location" in r.headers and "evil.com" in r.headers["Location"]:
