@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ECHO | AI Security Platform</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css">
+    
+    <style>
+        :root {
+            --bg-dark: #0f1115;
+            --bg-card: #161920;
+            --bg-card-hover: #1e222b;
+            --bg-input: #111317;
+            
+            --text-primary: #e2e8f0;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            
+            --accent-primary: #8b5cf6;
+            --accent-primary-hover: #7c3aed;
+            --border-color: #2e3643;
+            
+            --critical-bg: rgba(220, 38, 38, 0.15);
+            --critical-text: #ef4444;
+            --critical-solid: #dc2626;
+            
+            --high-bg: rgba(249, 115, 22, 0.15);
+            --high-text: #f97316;
+            --high-solid: #ea580c;
+            
+            --medium-bg: rgba(234, 179, 8, 0.15);
+            --medium-text: #eab308;
+            --medium-solid: #ca8a04;
+            
+            --low-bg: rgba(59, 130, 246, 0.15);
+            --low-text: #3b82f6;
+            --low-solid: #2563eb;
+            
+            --secure-bg: rgba(34, 197, 94, 0.15);
+            --secure-text: #22c55e;
+            --secure-solid: #16a34a;
+        }
+        
+        body { background-color: var(--bg-dark); color: var(--text-primary); font-family: 'Inter', sans-serif; }
+        .navbar { background-color: var(--bg-card); border-bottom: 1px solid var(--border-color); padding: 1rem 0; }
+        .navbar-brand { color: var(--text-primary) !important; font-weight: 700; letter-spacing: 1px; font-size: 1.5rem; }
+        .navbar-brand span { color: var(--accent-primary); }
+        
+        .card { background-color: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; margin-bottom: 24px; }
+        .card-header { border-bottom: 1px solid var(--border-color); padding: 1.25rem 1.5rem; font-weight: 600; display: flex; align-items: center; gap: 10px; }
+        .card-body { padding: 1.5rem; }
+        
+        .form-control, .form-select { background-color: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 8px; }
+        .form-control:focus, .form-select:focus { background-color: var(--bg-input); border-color: var(--accent-primary); color: var(--text-primary); box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.25); }
+        
+        .btn-primary { background-color: var(--accent-primary); border-color: var(--accent-primary); font-weight: 600; }
+        .btn-primary:hover { background-color: var(--accent-primary-hover); border-color: var(--accent-primary-hover); }
+        
+        .badge-critical { background-color: var(--critical-bg); color: var(--critical-text); border: 1px solid var(--critical-solid); }
+        .badge-high { background-color: var(--high-bg); color: var(--high-text); border: 1px solid var(--high-solid); }
+        .badge-medium { background-color: var(--medium-bg); color: var(--medium-text); border: 1px solid var(--medium-solid); }
+        .badge-low { background-color: var(--low-bg); color: var(--low-text); border: 1px solid var(--low-solid); }
+        .badge-secure { background-color: var(--secure-bg); color: var(--secure-text); border: 1px solid var(--secure-solid); }
+        
+        .stat-box { background-color: var(--bg-input); padding: 1.5rem; border-radius: 12px; border: 1px solid var(--border-color); text-align: center; }
+        .stat-val { font-size: 2rem; font-weight: 700; }
+        .score { background: linear-gradient(90deg, #3b82f6, #8b5cf6); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+        
+        .table { color: var(--text-primary); border-color: var(--border-color); }
+        .table > :not(caption) > * > * { background-color: transparent; border-bottom-color: var(--border-color); color: var(--text-primary); padding: 1rem; }
+        code { font-family: 'Fira Code', monospace; background-color: rgba(0, 0, 0, 0.3); color: #a78bfa; padding: 2px 6px; border-radius: 4px; }
+        
+        .ai-reasoning-list { font-size: 0.85rem; color: var(--text-secondary); list-style-type: none; padding-left: 0; }
+        .ai-reasoning-list li { margin-bottom: 4px; border-left: 2px solid var(--accent-primary); padding-left: 8px; }
+        
+        .attack-path { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; font-size: 0.85rem; font-family: 'Fira Code', monospace; margin-top: 8px; background: rgba(0,0,0,0.2); padding: 8px; border-radius: 6px; border: 1px dashed var(--border-color); }
+        .path-node { padding: 2px 6px; background: var(--bg-card); border-radius: 4px; color: var(--text-primary); }
+        .path-arrow { color: var(--accent-primary); }
+        
+        .form-check-input:checked { background-color: var(--accent-primary); border-color: var(--accent-primary); }
+        
+        /* DataTable Customization */
+        .dataTables_wrapper .dataTables_length, .dataTables_wrapper .dataTables_filter { color: var(--text-secondary) !important; margin-bottom: 1rem; }
+        .dataTables_wrapper .dataTables_info, .dataTables_wrapper .dataTables_paginate { color: var(--text-secondary) !important; margin-top: 1rem; }
+        .page-link { background-color: var(--bg-card); border-color: var(--border-color); color: var(--text-primary); }
+        .page-item.active .page-link { background-color: var(--accent-primary); border-color: var(--accent-primary); }
+        .dataTables_filter input { background-color: var(--bg-input) !important; color: var(--text-primary) !important; border: 1px solid var(--border-color) !important; border-radius: 6px; }
+        
+        .modal-content { background-color: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-primary); }
+        .modal-header { border-bottom: 1px solid var(--border-color); }
+        .modal-footer { border-top: 1px solid var(--border-color); }
+    </style>
+</head>
+<body>
+
+<nav class="navbar sticky-top">
+    <div class="container-fluid px-4">
+        <a class="navbar-brand" href="/">ECHO <span>INTELLIGENCE</span></a>
+        <div class="d-flex text-secondary align-items-center" style="font-size: 0.9rem;">
+            <i class="fa-solid fa-brain me-2" style="color: var(--accent-primary);"></i> 
+            Next-Generation AI Security Platform
+        </div>
+    </div>
+</nav>
+
+<div class="container-fluid px-4 py-4">
+
+    <!-- Configuration Panel -->
+    <div class="card mb-4">
+        <div class="card-header"><i class="fa-solid fa-sliders text-primary"></i> Scan Configuration</div>
+        <div class="card-body">
+            <form method="post" action="/">
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <label class="form-label text-secondary small text-uppercase">Target Domains (Comma Separated)</label>
+                        <textarea name="target" class="form-control bg-dark text-light" rows="2" placeholder="https://example.com, https://api.demo.com" required></textarea>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label text-secondary small text-uppercase">SAST Source Directory (Optional)</label>
+                        <input type="text" name="sast_dir" class="form-control bg-dark text-light mb-3" placeholder="/path/to/local/source/code">
+                        
+                        <div class="row">
+                            <div class="col-6">
+                                <label class="form-label text-secondary small text-uppercase">Scan Engine Profile</label>
+                                <select name="scan_mode" class="form-select bg-dark text-light">
+                                    <option value="quick">Quick Recon</option>
+                                    <option value="deep">Deep Payload</option>
+                                    <option value="research">0-Day Research Mode</option>
+                                </select>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label text-secondary small text-uppercase">Business Context</label>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="critical_data" id="critData">
+                                    <label class="form-check-label text-light small" for="critData">Critical Data Assets</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="gdpr" id="gdprCheck">
+                                    <label class="form-check-label text-light small" for="gdprCheck">GDPR / Compliance</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-4 text-end">
+                    <button type="submit" class="btn btn-primary px-5 py-2"><i class="fa-solid fa-rocket me-2"></i> Launch Hybrid Assessment</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {% if error %}
+    <div class="alert alert-danger shadow border border-danger bg-dark text-danger mb-4">
+        <i class="fa-solid fa-triangle-exclamation fs-4 me-3"></i> <strong>Execution Error:</strong> {{ error }}
+    </div>
+    {% endif %}
+
+    {% if security_score is not none %}
+    
+    {% if pdf_report_available %}
+    <div class="d-flex justify-content-end mb-4">
+        <a href="/download_report" class="btn btn-outline-secondary"><i class="fa-solid fa-file-pdf text-danger me-2"></i> Download Formal PDF Report</a>
+    </div>
+    {% endif %}
+
+    <div class="row g-4 mb-4">
+        <div class="col-xl-8">
+            <div class="card h-100 mb-0">
+                <div class="card-header"><i class="fa-solid fa-chart-line" style="color: var(--accent-primary);"></i> Threat Intelligence Overview</div>
+                <div class="card-body">
+                    <div class="d-flex gap-3 mb-4 flex-wrap">
+                        <div class="stat-box flex-fill">
+                            <div class="stat-label">AI Predictive Score</div>
+                            <div class="stat-val score">{{ security_score }} /100</div>
+                        </div>
+                        <div class="stat-box flex-fill">
+                            <div class="stat-label">Max Contextual Priority</div>
+                            <div class="stat-val text-light">{{ overall_cvss }}</div>
+                        </div>
+                        <div class="stat-box flex-fill">
+                            <div class="stat-label">Overall Risk State</div>
+                            <div class="stat-val mt-2">
+                                {% if overall_severity == "Critical" %}<span class="badge badge-critical px-3 py-2">Critical</span>
+                                {% elif overall_severity == "High" %}<span class="badge badge-high px-3 py-2">High</span>
+                                {% elif overall_severity == "Medium" %}<span class="badge badge-medium px-3 py-2">Medium</span>
+                                {% elif overall_severity == "Low" %}<span class="badge badge-low px-3 py-2">Low</span>
+                                {% else %}<span class="badge badge-secure px-3 py-2"><i class="fa-solid fa-shield-check me-1"></i> Secure Baseline</span>{% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {% if scan_meta %}
+                    <div class="row text-sm mt-4 p-3 rounded" style="background: var(--bg-input); border: 1px solid var(--border-color);">
+                        <div class="col-sm-4 mb-2"><span class="text-muted">Primary Target:</span> <span class="text-light ms-2 font-monospace">{{ scan_meta.target }}</span></div>
+                        <div class="col-sm-4 mb-2"><span class="text-muted">Multi-Domain:</span> <span class="text-light ms-2">{% if scan_meta.multi_target %}Enabled{% else %}Disabled{% endif %}</span></div>
+                        <div class="col-sm-4 mb-2"><span class="text-muted">SAST Active:</span> <span class="text-light ms-2">{% if scan_meta.sast_active %}<span class="text-success">Yes</span>{% else %}No{% endif %}</span></div>
+                        <div class="col-sm-4 mb-2"><span class="text-muted">Pages Crawled:</span> <span class="text-light ms-2">{{ scan_meta.pages_crawled }}</span></div>
+                        <div class="col-sm-4 mb-2"><span class="text-muted">Profile:</span> <span class="text-light ms-2">{{ scan_meta.mode }}</span></div>
+                        <div class="col-sm-4 mb-2"><span class="text-muted">Execution Time:</span> <span class="text-light ms-2">{{ scan_meta.duration }}s</span></div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-4">
+            <div class="card h-100 mb-0">
+                <div class="card-header"><i class="fa-solid fa-chart-pie" style="color: var(--accent-primary);"></i> Risk Distribution</div>
+                <div class="card-body d-flex align-items-center justify-content-center">
+                    <div style="width: 100%; max-width: 300px;">
+                        <canvas id="severityChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if results %}
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <span><i class="fa-solid fa-list-check" style="color: var(--accent-primary);"></i> Detailed Findings Exploration</span>
+            <div class="small text-muted">Intelligent Correlation Engine Active</div>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table id="findingsTable" class="table align-middle">
+                    <thead>
+                        <tr>
+                            <th>Threat Type</th>
+                            <th>Severity</th>
+                            <th>Score</th>
+                            <th>Confidence</th>
+                            <th>Source</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for r in results %}
+                        <tr>
+                            <td>
+                                <div class="fw-bold text-light">{{ r.type }}</div>
+                                <code class="small text-muted" style="font-size: 0.7rem;">{{ r.cwe }}</code>
+                            </td>
+                            <td>
+                                {% set sev = r.get('contextual_severity', r.get('severity', 'Medium')) %}
+                                {% if sev == "Critical" %}<span class="badge badge-critical">Critical</span>
+                                {% elif sev == "High" %}<span class="badge badge-high">High</span>
+                                {% elif sev == "Medium" %}<span class="badge badge-medium">Medium</span>
+                                {% else %}<span class="badge badge-low">Low</span>{% endif %}
+                            </td>
+                            <td>
+                                <span class="fw-bold fs-6 text-light">{{ r.get('priority_score', r.cvss) }}</span>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="progress flex-grow-1 me-2" style="height: 6px; background: rgba(255,255,255,0.05);">
+                                        <div class="progress-bar" role="progressbar" style="width: {{ (r.get('ai_likelihood', 0.5) * 100)|int }}%; background: var(--accent-primary);"></div>
+                                    </div>
+                                    <span class="small">{{ (r.get('ai_likelihood', 0.5) * 100)|int }}%</span>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="small text-truncate d-inline-block" style="max-width: 150px;">{{ r.get('url', '-') }}</span>
+                            </td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modal-{{ loop.index }}">
+                                    <i class="fa-solid fa-microscope"></i> Analyze
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <div class="card mb-4 border-0" style="background: transparent; box-shadow: none;">
+        <h5 class="text-light mb-3"><i class="fa-solid fa-shield-halved text-success me-2"></i> Autonomous Remediation Strategies</h5>
+        <div class="row g-3">
+            {% for r in results %}
+            <div class="col-md-6">
+                <div class="p-4 rounded border h-100" style="background: var(--bg-card); border-color: var(--border-color) !important;">
+                    <div class="d-flex align-items-center mb-3">
+                        {% set sev = r.get('contextual_severity', r.get('severity', 'Medium')) %}
+                        {% if sev == "Critical" %}<span style="background:var(--critical-solid);width:8px;height:20px;border-radius:4px;margin-right:10px;"></span>
+                        {% elif sev == "High" %}<span style="background:var(--high-solid);width:8px;height:20px;border-radius:4px;margin-right:10px;"></span>
+                        {% elif sev == "Medium" %}<span style="background:var(--medium-solid);width:8px;height:20px;border-radius:4px;margin-right:10px;"></span>
+                        {% else %}<span style="background:var(--low-solid);width:8px;height:20px;border-radius:4px;margin-right:10px;"></span>{% endif %}
+                        <h6 class="mb-0 fw-bold text-light">{{ r.type }}</h6>
+                    </div>
+                    <p class="text-muted small mb-3">{{ r.desc }}</p>
+                    <div class="p-3 rounded" style="background: rgba(34, 197, 94, 0.1); border-left: 3px solid #22c55e;">
+                        <span class="d-block text-success fw-bold small mb-1">MITIGATION PLAN</span>
+                        <span class="text-light small" style="opacity: 0.9;">{{ r.remediation }}</span>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+    {% endif %}
+
+</div>
+
+<!-- Result Modals -->
+{% if results %}
+{% for r in results %}
+<div class="modal fade" id="modal-{{ loop.index }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <span class="text-accent-primary me-2">Finding #{{ loop.index }}:</span> {{ r.type }}
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row g-4">
+                    <div class="col-md-7">
+                        <section class="mb-4">
+                            <h6 class="text-secondary small text-uppercase fw-bold mb-3"><i class="fa-solid fa-brain me-2"></i> AI Reasoning & Impact</h6>
+                            <ul class="ai-reasoning-list">
+                                {% for rationale in r.get('ai_reasoning', []) %}
+                                <li>{{ rationale }}</li>
+                                {% else %}
+                                <li>Heuristic/Signature match verified by dynamic testing.</li>
+                                {% endfor %}
+                            </ul>
+                        </section>
+                        
+                        <section class="mb-4">
+                            <h6 class="text-secondary small text-uppercase fw-bold mb-3"><i class="fa-solid fa-route me-2"></i> Attack Path Visualization</h6>
+                            {% if r.get('attack_path') %}
+                            <div class="attack-path">
+                                {% for node in r.attack_path.split(' ➔ ') %}
+                                    <span class="path-node">{{ node }}</span>
+                                    {% if not loop.last %}<span class="path-arrow"><i class="fa-solid fa-arrow-right"></i></span>{% endif %}
+                                {% endfor %}
+                            </div>
+                            {% else %}
+                            <div class="small text-muted">Linear discovery path.</div>
+                            {% endif %}
+                        </section>
+                        
+                        <section>
+                            <h6 class="text-secondary small text-uppercase fw-bold mb-3"><i class="fa-solid fa-code me-2"></i> Proof of Concept</h6>
+                            <div class="bg-black p-3 rounded border border-secondary">
+                                <code class="small d-block text-break">{{ r.get('safe_poc', 'n/a') }}</code>
+                            </div>
+                        </section>
+                    </div>
+                    <div class="col-md-5">
+                        <div class="p-3 rounded mb-3" style="background: var(--bg-input); border: 1px solid var(--border-color);">
+                            <div class="small text-muted mb-1 text-uppercase fw-bold" style="font-size: 0.7rem;">Verified Evidence</div>
+                            <div class="small text-break font-monospace">{{ r.get('evidence', '-') }}</div>
+                            <hr class="my-2 opacity-10">
+                            <div class="small text-muted mb-1 text-uppercase fw-bold" style="font-size: 0.7rem;">Target Endpoint</div>
+                            <div class="small text-break text-info font-monospace">{{ r.get('url', '-') }}</div>
+                        </div>
+                        
+                        <div class="p-3 rounded mb-3" style="background: rgba(34, 197, 94, 0.05); border: 1px solid rgba(34, 197, 94, 0.2);">
+                            <div class="small text-success mb-2 text-uppercase fw-bold" style="font-size: 0.7rem;">Mediation Guidance</div>
+                            <div class="small">{{ r.remediation }}</div>
+                        </div>
+                        
+                        {% if "Zero-Day" in r.type or "Anomaly" in r.type %}
+                        <div class="p-3 rounded" style="background: rgba(139, 92, 246, 0.05); border: 1px solid rgba(139, 92, 246, 0.2);">
+                            <div class="small text-accent-primary mb-1 text-uppercase fw-bold" style="font-size: 0.7rem;">Research Note</div>
+                            <div class="small italic">Finding discovered via unconventional Z-Score length deviation analysis.</div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close Analysis</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+{% endif %}
+
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+    $(document).ready(function() {
+        // Initialize DataTable
+        $('#findingsTable').DataTable({
+            "order": [[ 2, "desc" ]], // Sort by score by default
+            "pageLength": 10,
+            "language": {
+                "search": "_INPUT_",
+                "searchPlaceholder": "Search vectors..."
+            }
+        });
+
+        // Initialize Chart.js
+        {% if severity_counts %}
+        const ctx = document.getElementById('severityChart').getContext('2d');
+        const severityData = {{ severity_counts | tojson }};
+        
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Critical', 'High', 'Medium', 'Low'],
+                datasets: [{
+                    data: [
+                        severityData['Critical'], 
+                        severityData['High'], 
+                        severityData['Medium'], 
+                        severityData['Low']
+                    ],
+                    backgroundColor: [
+                        '#ef4444', // Critical
+                        '#f97316', // High
+                        '#eab308', // Medium
+                        '#3b82f6'  // Low
+                    ],
+                    borderColor: '#161920',
+                    borderWidth: 2,
+                    hoverOffset: 10
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            color: '#94a3b8',
+                            font: { size: 10 },
+                            usePointStyle: true,
+                            padding: 15
+                        }
+                    }
+                },
+                cutout: '70%'
+            }
+        });
+        {% endif %}
+    });
+</script>
+
+</body>
+</html>

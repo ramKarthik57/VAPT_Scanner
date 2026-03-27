@@ -1,0 +1,7 @@
+flask
+python-owasp-zap-v2.4
+requests
+matplotlib
+beautifulsoup4
+reportlab
+cryptography

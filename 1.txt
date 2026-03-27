@@ -1,0 +1,18 @@
+🔍 What Could Be Improved / Missing (The “Remaining 25%”)
+Authentication support – The scanner cannot log in or maintain sessions, so it misses vulnerabilities behind login forms.
+
+More robust detection logic – Some checks are simplistic (e.g., business logic always returns a finding; rate limiting just attempts 3 requests). Real‑world detection often requires more sophisticated payloads and response analysis.
+
+False positive reduction – Basic heuristics may produce false alarms; validation steps (e.g., confirming SQL error messages) are minimal.
+
+Reporting & export – Results only appear on the dashboard; no PDF/HTML report generation or export option.
+
+Custom payloads / configuration – Users cannot define their own test strings or adjust thresholds.
+
+Error handling & edge cases – The crawler and scanner may break on malformed HTML or timeouts; more graceful degradation would help.
+
+Performance optimisation – The current threading works, but shared data structures (like grouped) are not thread‑safe; using a Queue or locks would be safer.
+
+Scan scope & depth control – The “deep” mode adds time‑based SQLi, but other vulnerabilities aren’t scaled. A truly deep scan should test more variations.
+
+Test coverage – No unit/integration tests are included, which is important for a security tool.
